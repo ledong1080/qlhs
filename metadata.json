@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "name": "qlhs",
+=======
+  "name": "Tin12v4",
+>>>>>>> b10416c (Initial commit)
   "description": "A comprehensive system to manage student discipline, attendance, and performance, built with React and Tailwind CSS.",
   "requestFramePermissions": [],
   "prompt": ""
