@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { Pie, Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, ChartOptions, TooltipItem, BarElement, CategoryScale, LinearScale } from 'chart.js';
 import * as XLSX from 'xlsx';
+import './index.css';
 
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
