@@ -5,7 +5,6 @@ import { Pie, Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, ChartOptions, TooltipItem, BarElement, CategoryScale, LinearScale } from 'chart.js';
 import * as XLSX from 'xlsx';
 import './index.css';
-
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
 
@@ -26,17 +25,17 @@ const mockStudentsData = [
 
 const mockViolationsData = [
     { id: 1, student_id: 2, violation_date: '2025-07-30T09:15:00Z', violation_type: ['Đi học trễ', 'Vi phạm khác'], description: "Đến trễ 15 phút.", points_deducted: 5, severity_level: 'Nhẹ', status: 'Đã giải quyết', reported_by: 'tin12@gmail.com', resolved_date: '2025-07-30T14:00:00Z', violation_count: 1 },
-    { id: 2, student_id: 1, violation_date: '2025-08-01T08:00:00Z', violation_type: ['Không đồng phục'], description: "", points_deducted: 0, severity_level: 'Nhẹ', status: 'Chưa giải quyết', reported_by: 'tin12@gmail.com', resolved_date: null, violation_count: 1 },
-    { id: 3, student_id: 3, violation_date: '2025-07-29T10:00:00Z', violation_type: ['Sử dụng điện thoại'], description: 'Sử dụng điện thoại trong giờ học', points_deducted: 10, severity_level: 'Nặng', status: 'Chưa giải quyết', reported_by: 'giaovienly@email.com', resolved_date: null, violation_count: 1 },
-    { id: 4, student_id: 4, violation_date: '2025-07-28T11:20:00Z', violation_type: ['Mất trật tự'], description: 'Nói chuyện riêng, làm ồn', points_deducted: 2, severity_level: 'Nhẹ', status: 'Đã giải quyết', reported_by: 'giamthi@email.com', resolved_date: '2025-07-28T11:30:00Z', violation_count: 1 },
-    { id: 5, student_id: 2, violation_date: '2025-07-25T07:15:00Z', violation_type: ['Không đồng phục'], description: 'Sai đồng phục', points_deducted: 1, severity_level: 'Nhẹ', status: 'Đã giải quyết', reported_by: 'saodo@email.com', resolved_date: '2025-07-25T07:20:00Z', violation_count: 2 },
+    { id: 2, student_id: 1, violation_date: '2025-08-01T08:00:00Z', violation_type: ['Không đồng phục'], description: "", points_deducted: 5, severity_level: 'Nhẹ', status: 'Chưa giải quyết', reported_by: 'tin12@gmail.com', resolved_date: null, violation_count: 1 },
+    { id: 3, student_id: 3, violation_date: '2025-07-29T10:00:00Z', violation_type: ['Sử dụng điện thoại'], description: 'Sử dụng điện thoại trong giờ học', points_deducted: 5, severity_level: 'Nặng', status: 'Chưa giải quyết', reported_by: 'giaovienly@email.com', resolved_date: null, violation_count: 1 },
+    { id: 4, student_id: 4, violation_date: '2025-07-28T11:20:00Z', violation_type: ['Mất trật tự'], description: 'Nói chuyện riêng, làm ồn', points_deducted: 5, severity_level: 'Nhẹ', status: 'Đã giải quyết', reported_by: 'giamthi@email.com', resolved_date: '2025-07-28T11:30:00Z', violation_count: 1 },
+    { id: 5, student_id: 2, violation_date: '2025-07-25T07:15:00Z', violation_type: ['Không đồng phục'], description: 'Sai đồng phục', points_deducted: 5, severity_level: 'Nhẹ', status: 'Đã giải quyết', reported_by: 'saodo@email.com', resolved_date: '2025-07-25T07:20:00Z', violation_count: 2 },
 ];
 
 
 const mockAbsencesData = [
-    { student_id: 1, date: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString() },
-    { student_id: 2, date: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString() },
-    { student_id: 4, date: new Date(new Date().setDate(new Date().getDate() - 3)).toISOString() },
+    { student_id: 1, date: '2025-08-06T00:00:00Z' },
+    { student_id: 2, date: '2025-08-05T00:00:00Z' },
+    { student_id: 4, date: '2025-08-04T00:00:00Z' },
 ];
 
 const violationTypes = [
@@ -58,6 +57,34 @@ const mockAnnouncements = [
     { id: 2, title: 'Kế hoạch ôn tập thi cuối kỳ', content: 'Nhà trường đã ban hành kế hoạch ôn tập chi tiết cho kỳ thi cuối kỳ II. Đề nghị giáo viên chủ nhiệm và học sinh các lớp theo dõi và thực hiện nghiêm túc.', date: '2025-04-25T15:30:00Z' }
 ];
 // --- END MOCK DATA ---
+
+function useLocalStorage<T>(key: string, initialValue: T): [T, React.Dispatch<React.SetStateAction<T>>] {
+  const [state, setState] = React.useState<T>(() => {
+    if (typeof window === "undefined") {
+        return initialValue;
+    }
+    try {
+      const storedValue = window.localStorage.getItem(key);
+      return storedValue ? JSON.parse(storedValue) : initialValue;
+    } catch (error) {
+      console.error(error);
+      return initialValue;
+    }
+  });
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+        try {
+            window.localStorage.setItem(key, JSON.stringify(state));
+        } catch (error) {
+            console.error(error);
+        }
+    }
+  }, [key, state]);
+
+  return [state, setState];
+}
+
 
 interface AttendanceRecord {
   status: string;
@@ -81,7 +108,7 @@ const getInitialAttendanceRecord = (): AttendanceRecord => ({
 
 function MainComponent() {
   const [currentView, setCurrentView] = React.useState("dashboard");
-  const [isAuthenticated, setIsAuthenticated] = React.useState(true); // Default to logged in for showcase
+  const [isAuthenticated, setIsAuthenticated] = useLocalStorage('isAuthenticated', false);
   const [showLoginModal, setShowLoginModal] = React.useState(false);
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -100,11 +127,11 @@ function MainComponent() {
 
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedClass, setSelectedClass] = React.useState("");
-  const [students, setStudents] = React.useState(mockStudentsData);
-  const [classes, setClasses] = React.useState(mockClasses);
-  const [violations, setViolations] = React.useState(mockViolationsData);
-  const [rewards, setRewards] = React.useState(mockRewardsData);
-  const [absences, setAbsences] = React.useState(mockAbsencesData);
+  const [students, setStudents] = useLocalStorage('students', mockStudentsData);
+  const [classes, setClasses] = useLocalStorage('classes', mockClasses);
+  const [violations, setViolations] = useLocalStorage('violations', mockViolationsData);
+  const [rewards, setRewards] = useLocalStorage('rewards', mockRewardsData);
+  const [absences, setAbsences] = useLocalStorage('absences', mockAbsencesData);
   
   const [showStudentModal, setShowStudentModal] = React.useState(false);
   const [showImportModal, setShowImportModal] = React.useState(false);
@@ -124,11 +151,12 @@ function MainComponent() {
   const [studentToDelete, setStudentToDelete] = React.useState(null);
   const [violationToDelete, setViolationToDelete] = React.useState(null);
   const [rewardToDelete, setRewardToDelete] = React.useState(null);
+  const [absenceToDelete, setAbsenceToDelete] = React.useState(null);
   
   // State for Attendance View
   const [selectedDate, setSelectedDate] = React.useState(new Date());
   
-  const [attendanceRecords, setAttendanceRecords] = React.useState<AttendanceRecords>({});
+  const [attendanceRecords, setAttendanceRecords] = useLocalStorage<AttendanceRecords>('attendanceRecords', {});
   
   // State for Violations View
   const [violationSearchTerm, setViolationSearchTerm] = React.useState("");
@@ -144,9 +172,7 @@ function MainComponent() {
     violation_type: [],
     description: '',
     severity_level: 'Nhẹ',
-    points_deducted: 5,
     violation_date: new Date().toISOString().split('T')[0],
-    violation_count: 1,
     reported_by: 'GVCN',
   });
 
@@ -174,7 +200,7 @@ function MainComponent() {
   
     // State for Notifications View
     const [notificationTab, setNotificationTab] = React.useState('class'); // 'class' or 'parent'
-    const [announcements, setAnnouncements] = React.useState(mockAnnouncements);
+    const [announcements, setAnnouncements] = useLocalStorage('announcements', mockAnnouncements);
     const [showAnnouncementModal, setShowAnnouncementModal] = React.useState(false);
     const [editingAnnouncement, setEditingAnnouncement] = React.useState(null);
     const [announcementForm, setAnnouncementForm] = React.useState({ id: null, title: '', content: '' });
@@ -327,9 +353,13 @@ function MainComponent() {
         if (!isAuthenticated) return alert("Vui lòng đăng nhập để thực hiện thao tác này!");
         setEditingViolation(null);
         setViolationForm({
-            id: null, student_id: '', violation_type: [], description: '',
-            severity_level: 'Nhẹ', points_deducted: 5, violation_date: new Date().toISOString().split('T')[0],
-            violation_count: 1, reported_by: 'GVCN',
+            id: null,
+            student_id: '',
+            violation_type: [],
+            description: '',
+            severity_level: 'Nhẹ',
+            violation_date: new Date().toISOString().split('T')[0],
+            reported_by: 'GVCN',
         });
         setShowViolationModal(true);
     };
@@ -337,10 +367,15 @@ function MainComponent() {
     const handleOpenEditViolationModal = (violation) => {
         if (!isAuthenticated) return alert("Vui lòng đăng nhập để thực hiện thao tác này!");
         setEditingViolation(violation);
+        const { id, student_id, violation_type, description, severity_level, violation_date, reported_by } = violation;
         setViolationForm({
-            ...violation,
-            student_id: String(violation.student_id),
-            violation_date: new Date(violation.violation_date).toISOString().split('T')[0],
+            id,
+            student_id: String(student_id),
+            violation_type,
+            description,
+            severity_level,
+            violation_date: new Date(violation_date).toISOString().split('T')[0],
+            reported_by
         });
         setShowViolationModal(true);
     };
@@ -352,24 +387,26 @@ function MainComponent() {
             alert("Vui lòng chọn ít nhất một loại vi phạm.");
             return;
         }
-        
-        const finalViolation = {
-            ...violationForm,
-            student_id: parseInt(violationForm.student_id, 10),
-            points_deducted: Number(violationForm.points_deducted) || 0,
-            violation_count: Number(violationForm.violation_count) || 1,
-        };
 
         if (editingViolation) {
-            // Update: Merge new form data with the original full object to preserve status
-            const updatedViolation = { ...editingViolation, ...finalViolation };
+            const updatedViolation = { 
+                ...editingViolation, 
+                ...violationForm,
+                student_id: parseInt(violationForm.student_id, 10),
+                points_deducted: 5 // Always 5 points
+            };
             setViolations(violations.map(v => v.id === editingViolation.id ? updatedViolation : v));
             alert("Cập nhật vi phạm thành công!");
         } else {
-            // Create: Add new fields like status
+            const studentId = parseInt(violationForm.student_id, 10);
+            const newViolationCount = violations.filter(v => v.student_id === studentId).length + 1;
+            
             const newViolation = {
-                ...finalViolation,
+                ...violationForm,
                 id: Date.now(),
+                student_id: studentId,
+                points_deducted: 5, // Always 5 points
+                violation_count: newViolationCount, // Automatically calculated
                 status: 'Chưa giải quyết',
                 resolved_date: null,
             };
@@ -477,6 +514,20 @@ function MainComponent() {
     setRewardToDelete(null);
   };
     
+    const handleDeleteAbsence = (absenceToDelete) => {
+        if (!isAuthenticated) return alert("Vui lòng đăng nhập để thực hiện thao tác này!");
+        const student = students.find(s => s.id === absenceToDelete.student_id);
+        setAbsenceToDelete({ ...absenceToDelete, studentName: student ? student.full_name : 'Không xác định' });
+    };
+
+    const confirmDeleteAbsence = () => {
+        if (!absenceToDelete) return;
+        setAbsences(prev => prev.filter(a => 
+            !(a.student_id === absenceToDelete.student_id && a.date === absenceToDelete.date)
+        ));
+        alert("Xóa bản ghi vắng mặt thành công!");
+        setAbsenceToDelete(null);
+    };
 
   const handleSaveStudent = (e) => {
     e.preventDefault();
@@ -667,6 +718,7 @@ function MainComponent() {
   };
 
   const handleAttendanceChange = (studentId: number, field: keyof AttendanceRecord, value: any) => {
+    if (!isAuthenticated) return;
     const dateStr = selectedDate.toISOString().split('T')[0];
     setAttendanceRecords(prev => {
         const currentRecordsForDate = prev[dateStr] || {};
@@ -1009,7 +1061,12 @@ function MainComponent() {
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-gray-500 text-sm font-medium">{title}</p>
+          <p 
+            className="text-sm font-bold"
+            style={{ color: '#1e40af', textShadow: '1px 1px 1px rgba(0,0,0,0.25)' }}
+          >
+            {title}
+          </p>
           <p className="text-4xl font-bold my-1" style={{ color }}>{value}</p>
           {subtitle && <p className="text-gray-400 text-xs">{subtitle}</p>}
         </div>
@@ -1023,9 +1080,6 @@ function MainComponent() {
     </div>
   );
 
-  const dailyViolatingStudentIds = new Set(dailyViolations.map(v => v.student_id));
-  const weeklyViolatingStudentIds = new Set(weeklyViolations.map(v => v.student_id));
-
   const chartOptions: ChartOptions<'pie'> = {
     responsive: true, maintainAspectRatio: false,
     plugins: { legend: { position: 'top' },
@@ -1034,7 +1088,17 @@ function MainComponent() {
           label: function(context: TooltipItem<'pie'>) {
             let label = context.label || '';
             if (label) label += ': ';
-            if (context.parsed !== null) label += `${context.raw} học sinh`;
+            if (context.parsed !== null) {
+                const total = context.chart.data.datasets[0].data.reduce((sum, current) => {
+                    if (typeof current === 'number') {
+                        return sum + current;
+                    }
+                    return sum;
+                }, 0);
+                const value = typeof context.raw === 'number' ? context.raw : 0;
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%';
+                label += `${value} (${percentage})`;
+            }
             return label;
           }
         }
@@ -1042,19 +1106,44 @@ function MainComponent() {
     },
   };
 
-  const dailyChartData = {
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+
+  const monthlyViolatingStudentIds = new Set(
+    violations
+      .filter(v => {
+        const violationDate = new Date(v.violation_date);
+        return violationDate.getMonth() === currentMonth && violationDate.getFullYear() === currentYear;
+      })
+      .map(v => v.student_id)
+  );
+
+  const monthlyViolationChartData = {
     labels: ['Học sinh vi phạm', 'Học sinh không vi phạm'],
     datasets: [{
-      data: [dailyViolatingStudentIds.size, stats.totalStudents - dailyViolatingStudentIds.size],
-      backgroundColor: ['#ef4444', '#22c55e'], borderColor: ['#f8fafc', '#f8fafc'], borderWidth: 2,
+      data: [monthlyViolatingStudentIds.size, students.length - monthlyViolatingStudentIds.size],
+      backgroundColor: ['#ef4444', '#22c55e'],
+      borderColor: ['#f8fafc', '#f8fafc'],
+      borderWidth: 2,
     }],
   };
   
-  const weeklyChartData = {
-    labels: ['Học sinh vi phạm', 'Học sinh không vi phạm'],
+  const monthlyAbsentStudentIds = new Set(
+    absences
+      .filter(a => {
+        const absenceDate = new Date(a.date);
+        return absenceDate.getMonth() === currentMonth && absenceDate.getFullYear() === currentYear;
+      })
+      .map(a => a.student_id)
+  );
+
+  const monthlyAbsenceChartData = {
+    labels: ['Học sinh vắng mặt', 'Học sinh có mặt'],
     datasets: [{
-      data: [weeklyViolatingStudentIds.size, stats.totalStudents - weeklyViolatingStudentIds.size],
-      backgroundColor: ['#f97316', '#22c55e'], borderColor: ['#f8fafc', '#f8fafc'], borderWidth: 2,
+      data: [monthlyAbsentStudentIds.size, students.length - monthlyAbsentStudentIds.size],
+      backgroundColor: ['#ef4444', '#22c55e'],
+      borderColor: ['#f8fafc', '#f8fafc'],
+      borderWidth: 2,
     }],
   };
   
@@ -1180,7 +1269,7 @@ function MainComponent() {
         beginAtZero: true,
         ticks: {
           stepSize: 1,
-          callback: function(value) { if (Number.isInteger(value)) { return value; } },
+          callback: function(value) { if (Number.isInteger(Number(value))) { return value; } },
         }
       }
     }
@@ -1188,16 +1277,14 @@ function MainComponent() {
 
 
   const getConductClassification = (score) => {
-    if (score >= 90) return { text: "Tốt", className: "bg-green-100 text-green-800" };
-    if (score >= 80) return { text: "Khá", className: "bg-yellow-100 text-yellow-800" };
-    if (score >= 70) return { text: "Trung bình", className: "bg-orange-100 text-orange-800" };
-    return { text: "Yếu", className: "bg-red-100 text-red-800" };
+    if (score >= 70) return { text: "Tốt", className: "bg-green-100 text-green-800" };
+    return { text: "Khá", className: "bg-yellow-100 text-yellow-800" };
   };
 
-  const StudentCard = ({ student, onEdit, onDelete }) => {
+  const StudentCard = ({ student, onEdit, onDelete, isAuthenticated }) => {
     const calculatedScore = calculateConductScore(student);
     const classification = getConductClassification(calculatedScore);
-    const scoreColor = calculatedScore >= 90 ? 'text-green-500' : calculatedScore >= 80 ? 'text-yellow-500' : 'text-red-500';
+    const scoreColor = calculatedScore >= 70 ? 'text-green-500' : 'text-yellow-500';
 
     return (
       <div className="bg-white rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 flex flex-col">
@@ -1212,10 +1299,10 @@ function MainComponent() {
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <button onClick={() => onEdit(student)} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 w-8 h-8 rounded-md flex items-center justify-center transition-colors">
+            <button onClick={() => onEdit(student)} disabled={!isAuthenticated} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 w-8 h-8 rounded-md flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               <i className="fas fa-edit"></i>
             </button>
-            <button onClick={() => onDelete(student.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50 w-8 h-8 rounded-md flex items-center justify-center transition-colors">
+            <button onClick={() => onDelete(student.id)} disabled={!isAuthenticated} className="text-red-500 hover:text-red-700 hover:bg-red-50 w-8 h-8 rounded-md flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               <i className="fas fa-trash"></i>
             </button>
           </div>
@@ -1232,7 +1319,7 @@ function MainComponent() {
     );
   };
   
-  const ViolationCard = ({ violation, onEdit, onDelete, onResolve }) => {
+  const ViolationCard = ({ violation, onEdit, onDelete, onResolve, isAuthenticated }) => {
     const student = violation.student;
     if (!student) return null;
 
@@ -1280,7 +1367,8 @@ function MainComponent() {
                 {violation.status === 'Chưa giải quyết' ? (
                     <button
                         onClick={() => onResolve(violation.id)}
-                        className="flex-grow flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-100 text-green-700 font-semibold shadow-sm hover:bg-green-200 transition"
+                        disabled={!isAuthenticated}
+                        className="flex-grow flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-100 text-green-700 font-semibold shadow-sm hover:bg-green-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <i className="fas fa-check-circle"></i>
                         <span>Giải quyết</span>
@@ -1290,10 +1378,10 @@ function MainComponent() {
                 )}
                 
                 <div className="flex-shrink-0 flex items-center gap-1">
-                    <button onClick={() => onEdit(violation)} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 w-8 h-8 rounded-md flex items-center justify-center transition-colors">
+                    <button onClick={() => onEdit(violation)} disabled={!isAuthenticated} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 w-8 h-8 rounded-md flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                         <i className="fas fa-edit"></i>
                     </button>
-                    <button onClick={() => onDelete(violation)} className="text-red-500 hover:text-red-700 hover:bg-red-50 w-8 h-8 rounded-md flex items-center justify-center transition-colors">
+                    <button onClick={() => onDelete(violation)} disabled={!isAuthenticated} className="text-red-500 hover:text-red-700 hover:bg-red-50 w-8 h-8 rounded-md flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                         <i className="fas fa-trash"></i>
                     </button>
                 </div>
@@ -1302,7 +1390,7 @@ function MainComponent() {
     );
   };
   
-  const RewardCard = ({ reward, onEdit, onDelete }) => {
+  const RewardCard = ({ reward, onEdit, onDelete, isAuthenticated }) => {
     const student = reward.student;
     if (!student) return null;
 
@@ -1339,10 +1427,10 @@ function MainComponent() {
             <div className="flex items-center gap-2 mt-auto pt-4 border-t border-gray-100">
                 <div className="flex-grow"></div>
                 <div className="flex-shrink-0 flex items-center gap-1">
-                    <button onClick={() => onEdit(reward)} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 w-8 h-8 rounded-md flex items-center justify-center transition-colors">
+                    <button onClick={() => onEdit(reward)} disabled={!isAuthenticated} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 w-8 h-8 rounded-md flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                         <i className="fas fa-edit"></i>
                     </button>
-                    <button onClick={() => onDelete(reward)} className="text-red-500 hover:text-red-700 hover:bg-red-50 w-8 h-8 rounded-md flex items-center justify-center transition-colors">
+                    <button onClick={() => onDelete(reward)} disabled={!isAuthenticated} className="text-red-500 hover:text-red-700 hover:bg-red-50 w-8 h-8 rounded-md flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                         <i className="fas fa-trash"></i>
                     </button>
                 </div>
@@ -1384,8 +1472,8 @@ function MainComponent() {
       </header>
 
       <div className="flex flex-grow">
-        <aside className="w-64 bg-white shadow-lg sticky top-[85px] border-r border-gray-200">
-          <div className="p-4">
+        <aside className="w-64 bg-white shadow-lg sticky top-[85px] border-r border-gray-200 flex flex-col">
+          <div className="p-4 flex-grow">
             <nav className="space-y-2">
               {menuItems.map((item) => (
                 <button
@@ -1405,68 +1493,124 @@ function MainComponent() {
               ))}
             </nav>
           </div>
+          {/* Watermark */}
+          <div className="p-4 text-center select-none pointer-events-none">
+            <p className="font-semibold text-xs text-gray-400" style={{ textShadow: '1px 1px 0px rgba(255, 255, 255, 0.7)' }}>
+                Design by LVD
+            </p>
+            <p className="font-semibold text-xs text-gray-400" style={{ textShadow: '1px 1px 0px rgba(255, 255, 255, 0.7)' }}>
+                Copyright @ LTT
+            </p>
+          </div>
         </aside>
 
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 relative">
           {currentView === "dashboard" && (
-            <div className="space-y-6 animate-fade-in">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">Chào mừng trở lại! 👋</h2>
-                <p className="text-gray-600">{formattedDate}</p>
-              </div>
-
-              {loading ? (
-                <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div></div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                    <StatCard title="Tổng số học sinh" value={stats.totalStudents} icon="fas fa-users" color="#4f46e5" subtitle="Đang theo học" />
-                    <StatCard title="Lượt vi phạm hôm nay" value={stats.dailyViolationsCount} icon="fas fa-exclamation-triangle" color="#dc2626" subtitle="Cần xử lý" />
-                    <StatCard title="Lượt vi phạm tuần" value={weeklyViolations.length} icon="fas fa-calendar-alt" color="#ea580c" subtitle="Trong 7 ngày qua" />
-                    <StatCard title="Học sinh có mặt" value={stats.dailyAttendance} icon="fas fa-calendar-check" color="#059669" subtitle="Hôm nay" />
-                    <StatCard title="Học sinh vắng mặt" value={stats.dailyAbsentees} icon="fas fa-user-slash" color="#ef4444" subtitle="Hôm nay" />
+            <>
+                <div className="space-y-6 animate-fade-in">
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-800 mb-2">Chào mừng trở lại! 👋</h2>
+                    <p className="text-gray-600">{formattedDate}</p>
                   </div>
-                  
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Column 1: Charts */}
-                    <div className="space-y-6">
-                        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl">
-                            <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center"><i className="fas fa-chart-pie text-red-500 mr-2"></i>Tỉ lệ vi phạm trong ngày</h3>
-                            <div className="h-64 flex items-center justify-center">{dailyViolatingStudentIds.size > 0 ? (<Pie data={dailyChartData} options={chartOptions} />) : (<div className="text-center"><i className="fas fa-check-circle text-4xl text-green-400 mb-2"></i><p className="text-gray-600">Không có học sinh vi phạm hôm nay!</p></div>)}</div>
-                        </div>
-                        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl">
-                          <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center"><i className="fas fa-chart-bar text-orange-500 mr-2"></i>Tỉ lệ vi phạm trong tuần</h3>
-                          <div className="h-64 flex items-center justify-center">{weeklyViolatingStudentIds.size > 0 ? (<Pie data={weeklyChartData} options={chartOptions} />) : (<div className="text-center"><i className="fas fa-check-circle text-4xl text-green-400 mb-2"></i><p className="text-gray-600">Không có học sinh vi phạm trong tuần!</p></div>)}</div>
-                        </div>
-                    </div>
 
-                    {/* Column 2: Violation Lists */}
-                    <div className="space-y-6">
-                        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl">
-                            <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center"><i className="fas fa-calendar-day text-red-500 mr-2"></i>Học sinh vi phạm trong ngày</h3>
-                            <div className="space-y-3 h-64 overflow-y-auto pr-2">{dailyViolations.length > 0 ? (dailyViolations.map((violation) => (<div key={violation.id} className="flex items-center p-3 bg-red-50 rounded-lg border-l-4 border-red-400 hover:bg-red-100 transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-sm"><div className="w-8 h-8 bg-red-400 rounded-full flex items-center justify-center mr-3 flex-shrink-0"><i className="fas fa-user-times text-white text-sm"></i></div><div className="flex-1"><p className="font-medium text-gray-800">{students.find(s => s.id === violation.student_id)?.full_name || 'Học sinh không xác định'}</p><p className="text-sm text-gray-600">{Array.isArray(violation.violation_type) ? violation.violation_type.join(', ') : violation.violation_type}</p></div><span className="text-xs text-gray-500">{new Date(violation.violation_date).toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' })}</span></div>))) : (<div className="text-center flex flex-col items-center justify-center h-full"><i className="fas fa-check-circle text-4xl text-green-400 mb-2"></i><p className="text-gray-600">Không có vi phạm nào hôm nay!</p></div>)}</div>
+                  {loading ? (
+                    <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div></div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                        <StatCard title="Tổng số học sinh" value={stats.totalStudents} icon="fas fa-users" color="#4f46e5" subtitle="Đang theo học" />
+                        <StatCard title="Lượt vi phạm hôm nay" value={stats.dailyViolationsCount} icon="fas fa-exclamation-triangle" color="#dc2626" subtitle="Cần xử lý" />
+                        <StatCard title="Lượt vi phạm tuần" value={weeklyViolations.length} icon="fas fa-calendar-alt" color="#ea580c" subtitle="Trong 7 ngày qua" />
+                        <StatCard title="Học sinh có mặt" value={stats.dailyAttendance} icon="fas fa-calendar-check" color="#059669" subtitle="Hôm nay" />
+                        <StatCard title="Học sinh vắng mặt" value={stats.dailyAbsentees} icon="fas fa-user-slash" color="#ef4444" subtitle="Hôm nay" />
+                      </div>
+                      
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Column 1: Charts */}
+                        <div className="space-y-6">
+                            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl">
+                                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center"><i className="fas fa-chart-pie text-red-500 mr-2"></i>Tỉ lệ vi phạm trong tháng</h3>
+                                <div className="h-64 flex items-center justify-center">{monthlyViolatingStudentIds.size > 0 ? (<Pie data={monthlyViolationChartData} options={chartOptions} />) : (<div className="text-center"><i className="fas fa-check-circle text-4xl text-green-400 mb-2"></i><p className="text-gray-600">Không có học sinh vi phạm trong tháng này!</p></div>)}</div>
+                            </div>
+                            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl">
+                              <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center"><i className="fas fa-user-slash text-blue-500 mr-2"></i>Tỉ lệ vắng trong tháng</h3>
+                                <div className="h-64 flex items-center justify-center">
+                                    {monthlyAbsentStudentIds.size > 0 ? (
+                                        <Pie data={monthlyAbsenceChartData} options={chartOptions} />
+                                    ) : (
+                                        <div className="text-center">
+                                            <i className="fas fa-user-check text-4xl text-green-400 mb-2"></i>
+                                            <p className="text-gray-600">Không có học sinh nào vắng trong tháng này!</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl">
-                            <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center"><i className="fas fa-calendar-week text-orange-500 mr-2"></i>Học sinh vi phạm trong tuần</h3>
-                            <div className="space-y-3 h-64 overflow-y-auto pr-2">{weeklyViolations.length > 0 ? (weeklyViolations.map((violation) => (<div key={violation.id} className="flex items-center p-3 bg-orange-50 rounded-lg border-l-4 border-orange-400 hover:bg-orange-100 transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-sm"><div className="w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center mr-3 flex-shrink-0"><i className="fas fa-user-times text-white text-sm"></i></div><div className="flex-1"><p className="font-medium text-gray-800">{students.find(s => s.id === violation.student_id)?.full_name || 'Học sinh không xác định'}</p><p className="text-sm text-gray-600">{Array.isArray(violation.violation_type) ? violation.violation_type.join(', ') : violation.violation_type}</p></div><span className="text-xs text-gray-500">{new Date(violation.violation_date).toLocaleDateString("vi-VN")}</span></div>))) : (<div className="text-center flex flex-col items-center justify-center h-full"><i className="fas fa-check-circle text-4xl text-green-400 mb-2"></i><p className="text-gray-600">Không có vi phạm nào trong tuần!</p></div>)}</div>
-                        </div>
-                    </div>
 
-                    {/* Column 3: Absence Lists */}
-                    <div className="space-y-6">
-                        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl">
-                            <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center"><i className="fas fa-user-slash text-blue-500 mr-2"></i>Học sinh vắng trong ngày</h3>
-                            <div className="space-y-3 h-64 overflow-y-auto pr-2">{dailyAbsenceDetails.length > 0 ? (dailyAbsenceDetails.map((absence) => (<div key={`daily-abs-${absence.student_id}`} className="flex items-center p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400 hover:bg-blue-100 transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-sm"><div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center mr-3 flex-shrink-0"><i className="fas fa-user-check text-white text-sm"></i></div><div className="flex-1"><p className="font-medium text-gray-800">{students.find(s => s.id === absence.student_id)?.full_name || 'Học sinh không xác định'}</p><p className="text-sm text-gray-600">Lớp: {students.find(s => s.id === absence.student_id)?.class_name || 'N/A'}</p></div></div>))) : (<div className="text-center flex flex-col items-center justify-center h-full"><i className="fas fa-calendar-check text-4xl text-green-400 mb-2"></i><p className="text-gray-600">Không có học sinh nào vắng hôm nay!</p></div>)}</div>
+                        {/* Column 2: Violation Lists */}
+                        <div className="space-y-6">
+                            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl">
+                                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center"><i className="fas fa-calendar-day text-orange-500 mr-2"></i>Học sinh vi phạm trong tuần</h3>
+                                <div className="space-y-3 h-64 overflow-y-auto pr-2">{weeklyViolations.length > 0 ? (weeklyViolations.map((violation) => {
+                                    const student = students.find(s => s.id === violation.student_id);
+                                    const date = new Date(violation.violation_date);
+                                    return (
+                                        <div key={violation.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border-l-4 border-orange-400 hover:bg-orange-100 transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-sm">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center flex-shrink-0"><i className="fas fa-user-times text-white text-sm"></i></div>
+                                                <div className="flex-1">
+                                                    <p className="font-medium text-gray-800">{student?.full_name || 'Học sinh không xác định'}</p>
+                                                    <p className="text-sm text-gray-600">{Array.isArray(violation.violation_type) ? violation.violation_type.join(', ') : violation.violation_type}</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right text-xs ml-2">
+                                                <p className="font-medium text-gray-700">{weekdays[date.getDay()]}</p>
+                                                <p className="text-gray-500">{date.toLocaleDateString("vi-VN")}</p>
+                                            </div>
+                                        </div>
+                                    );
+                                })) : (<div className="text-center flex flex-col items-center justify-center h-full"><i className="fas fa-check-circle text-4xl text-green-400 mb-2"></i><p className="text-gray-600">Không có vi phạm nào trong tuần!</p></div>)}</div>
+                            </div>
+                            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl">
+                                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center"><i className="fas fa-calendar-times text-purple-500 mr-2"></i>Học sinh vắng trong tuần</h3>
+                                <div className="space-y-3 h-64 overflow-y-auto pr-2">{weeklyAbsenceDetails.length > 0 ? (weeklyAbsenceDetails.map((absence) => {
+                                    const student = students.find(s => s.id === absence.student_id);
+                                    const date = new Date(absence.date);
+                                    return (
+                                        <div key={`weekly-abs-${absence.student_id}-${absence.date}`} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border-l-4 border-purple-400 hover:bg-purple-100 transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-sm">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 bg-purple-400 rounded-full flex items-center justify-center flex-shrink-0"><i className="fas fa-user-check text-white text-sm"></i></div>
+                                                <div className="flex-1">
+                                                    <p className="font-medium text-gray-800">{student?.full_name || 'Học sinh không xác định'}</p>
+                                                    <p className="text-sm text-gray-600">Lớp: {student?.class_name || 'N/A'}</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right text-xs ml-2">
+                                                <p className="font-medium text-gray-700">{weekdays[date.getDay()]}</p>
+                                                <p className="text-gray-500">{date.toLocaleDateString("vi-VN")}</p>
+                                            </div>
+                                        </div>
+                                    )
+                                })) : (<div className="text-center flex flex-col items-center justify-center h-full"><i className="fas fa-calendar-check text-4xl text-green-400 mb-2"></i><p className="text-gray-600">Không có học sinh nào vắng trong tuần!</p></div>)}</div>
+                            </div>
                         </div>
-                        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl">
-                            <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center"><i className="fas fa-calendar-times text-purple-500 mr-2"></i>Học sinh vắng trong tuần</h3>
-                            <div className="space-y-3 h-64 overflow-y-auto pr-2">{weeklyAbsenceDetails.length > 0 ? (weeklyAbsenceDetails.map((absence) => (<div key={`weekly-abs-${absence.student_id}-${absence.date}`} className="flex items-center p-3 bg-purple-50 rounded-lg border-l-4 border-purple-400 hover:bg-purple-100 transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-sm"><div className="w-8 h-8 bg-purple-400 rounded-full flex items-center justify-center mr-3 flex-shrink-0"><i className="fas fa-user-check text-white text-sm"></i></div><div className="flex-1"><p className="font-medium text-gray-800">{students.find(s => s.id === absence.student_id)?.full_name || 'Học sinh không xác định'}</p><p className="text-sm text-gray-600">Lớp: {students.find(s => s.id === absence.student_id)?.class_name || 'N/A'}</p></div><span className="text-xs text-gray-500">{new Date(absence.date).toLocaleDateString("vi-VN")}</span></div>))) : (<div className="text-center flex flex-col items-center justify-center h-full"><i className="fas fa-calendar-check text-4xl text-green-400 mb-2"></i><p className="text-gray-600">Không có học sinh nào vắng trong tuần!</p></div>)}</div>
+
+                        {/* Column 3: Daily Lists */}
+                        <div className="space-y-6">
+                           <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl">
+                                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center"><i className="fas fa-calendar-day text-red-500 mr-2"></i>Học sinh vi phạm trong ngày</h3>
+                                <div className="space-y-3 h-64 overflow-y-auto pr-2">{dailyViolations.length > 0 ? (dailyViolations.map((violation) => (<div key={violation.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border-l-4 border-red-400 hover:bg-red-100 transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-sm"><div className="flex items-center gap-3"><div className="w-8 h-8 bg-red-400 rounded-full flex items-center justify-center flex-shrink-0"><i className="fas fa-user-times text-white text-sm"></i></div><div className="flex-1"><p className="font-medium text-gray-800">{students.find(s => s.id === violation.student_id)?.full_name || 'Học sinh không xác định'}</p><p className="text-sm text-gray-600">{Array.isArray(violation.violation_type) ? violation.violation_type.join(', ') : violation.violation_type}</p></div></div><span className="text-xs text-gray-500">{new Date(violation.violation_date).toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' })}</span></div>))) : (<div className="text-center flex flex-col items-center justify-center h-full"><i className="fas fa-check-circle text-4xl text-green-400 mb-2"></i><p className="text-gray-600">Không có vi phạm nào hôm nay!</p></div>)}</div>
+                            </div>
+                             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl">
+                                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center"><i className="fas fa-user-slash text-blue-500 mr-2"></i>Học sinh vắng trong ngày</h3>
+                                <div className="space-y-3 h-64 overflow-y-auto pr-2">{dailyAbsenceDetails.length > 0 ? (dailyAbsenceDetails.map((absence) => (<div key={`daily-abs-${absence.student_id}`} className="flex items-center p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400 hover:bg-blue-100 transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-sm"><div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center mr-3 flex-shrink-0"><i className="fas fa-user-check text-white text-sm"></i></div><div className="flex-1"><p className="font-medium text-gray-800">{students.find(s => s.id === absence.student_id)?.full_name || 'Học sinh không xác định'}</p><p className="text-sm text-gray-600">Lớp: {students.find(s => s.id === absence.student_id)?.class_name || 'N/A'}</p></div></div>))) : (<div className="text-center flex flex-col items-center justify-center h-full"><i className="fas fa-calendar-check text-4xl text-green-400 mb-2"></i><p className="text-gray-600">Không có học sinh nào vắng hôm nay!</p></div>)}</div>
+                            </div>
                         </div>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+            </>
           )}
 
           {currentView === "students" && (
@@ -1477,14 +1621,14 @@ function MainComponent() {
                       <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} className="w-full sm:w-auto px-4 py-3 border bg-white border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"><option value="">Tất cả lớp</option>{classes.map((cls) => (<option key={cls.id} value={cls.id}>{cls.name}</option>))}</select>
                   </div>
                   <div className="flex items-center gap-3 flex-wrap">
-                      <button onClick={() => { if (isAuthenticated) { setImportFile(null); setImportResults(null); setShowImportModal(true); } else alert("Vui lòng đăng nhập để thực hiện thao tác này!"); }} className="flex items-center justify-center px-4 py-2 rounded-lg bg-[#1db954] text-white font-semibold shadow hover:bg-green-600 transition"><i className="fas fa-file-csv mr-2"></i><span>Thêm từ CSV</span></button>
-                      <button onClick={handleDownloadTemplate} className="flex items-center justify-center px-4 py-2 rounded-lg bg-fuchsia-500 text-white font-semibold shadow hover:bg-fuchsia-600 transition"><i className="fas fa-file-alt mr-2"></i><span>Tạo file mẫu</span></button>
-                      <button onClick={handleExportStudents} className="flex items-center justify-center px-4 py-2 rounded-lg bg-orange-500 text-white font-semibold shadow hover:bg-orange-600 transition"><i className="fas fa-download mr-2"></i><span>Xuất danh sách</span></button>
-                      <button onClick={() => { if (isAuthenticated) { setEditingStudent(null); setStudentForm({student_code: "",full_name: "",date_of_birth: "",gender: "Nam",class_id: "",parent_phone: "",parent_zalo: "",address: ""}); setShowStudentModal(true); } else alert("Vui lòng đăng nhập để thực hiện thao tác này!"); }} className="flex items-center justify-center px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-green-500 text-white font-semibold shadow hover:shadow-lg transition"><i className="fas fa-plus mr-2"></i><span>Thêm học sinh</span></button>
+                      <button onClick={() => { setImportFile(null); setImportResults(null); setShowImportModal(true); }} disabled={!isAuthenticated} className="flex items-center justify-center px-4 py-2 rounded-lg bg-[#1db954] text-white font-semibold shadow hover:bg-green-600 transition disabled:opacity-50 disabled:cursor-not-allowed"><i className="fas fa-file-csv mr-2"></i><span>Thêm từ CSV</span></button>
+                      <button onClick={handleDownloadTemplate} disabled={!isAuthenticated} className="flex items-center justify-center px-4 py-2 rounded-lg bg-fuchsia-500 text-white font-semibold shadow hover:bg-fuchsia-600 transition disabled:opacity-50 disabled:cursor-not-allowed"><i className="fas fa-file-alt mr-2"></i><span>Tạo file mẫu</span></button>
+                      <button onClick={handleExportStudents} disabled={!isAuthenticated} className="flex items-center justify-center px-4 py-2 rounded-lg bg-orange-500 text-white font-semibold shadow hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"><i className="fas fa-download mr-2"></i><span>Xuất danh sách</span></button>
+                      <button onClick={() => { setEditingStudent(null); setStudentForm({student_code: "",full_name: "",date_of_birth: "",gender: "Nam",class_id: "",parent_phone: "",parent_zalo: "",address: ""}); setShowStudentModal(true); }} disabled={!isAuthenticated} className="flex items-center justify-center px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-green-500 text-white font-semibold shadow hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"><i className="fas fa-plus mr-2"></i><span>Thêm học sinh</span></button>
                   </div>
               </div>
 
-              {filteredStudents.length > 0 ? (<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">{filteredStudents.map((student) => (<StudentCard key={student.id} student={student} onEdit={handleEditStudent} onDelete={handleDeleteStudent} />))}</div>) : (<div className="text-center py-16 bg-white rounded-2xl shadow-lg border border-gray-100"><i className="fas fa-users text-5xl text-gray-300 mb-4"></i><h3 className="text-xl font-semibold text-gray-600">Không tìm thấy học sinh</h3><p className="text-gray-500 mt-2">Vui lòng thử lại với từ khóa hoặc bộ lọc khác.</p></div>)}
+              {filteredStudents.length > 0 ? (<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">{filteredStudents.map((student) => (<StudentCard key={student.id} student={student} onEdit={handleEditStudent} onDelete={handleDeleteStudent} isAuthenticated={isAuthenticated} />))}</div>) : (<div className="text-center py-16 bg-white rounded-2xl shadow-lg border border-gray-100"><i className="fas fa-users text-5xl text-gray-300 mb-4"></i><h3 className="text-xl font-semibold text-gray-600">Không tìm thấy học sinh</h3><p className="text-gray-500 mt-2">Vui lòng thử lại với từ khóa hoặc bộ lọc khác.</p></div>)}
             </div>
           )}
 
@@ -1494,11 +1638,11 @@ function MainComponent() {
                     <div className="relative"><input type="text" value={selectedDate.toLocaleDateString('vi-VN')} readOnly className="w-40 px-4 py-3 border bg-white border-gray-200 rounded-lg shadow-sm" /><i className="fas fa-calendar absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i><input type="date" value={selectedDate.toISOString().split('T')[0]} onChange={e => { const dateValue = e.target.value; if(dateValue) { setSelectedDate(new Date(dateValue + 'T00:00:00')); } }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" /></div>
                     <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full sm:w-64 px-4 py-3 border bg-white border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent transition" placeholder="Tìm kiếm học sinh..." />
                     <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} className="w-full sm:w-auto px-4 py-3 border bg-white border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"><option value="">Tất cả lớp</option>{classes.map((cls) => (<option key={cls.id} value={cls.id}>{cls.name}</option>))}</select>
-                    <button onClick={handleUpdateAttendance} className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-2"><i className="fas fa-save"></i><span>Cập nhật</span></button>
+                    <button onClick={handleUpdateAttendance} disabled={!isAuthenticated} className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><i className="fas fa-save"></i><span>Cập nhật</span></button>
                 </div>
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-x-auto">
                     <table className="w-full min-w-[900px] text-sm"><thead className="bg-gradient-to-b from-green-50 to-white/50"><tr><th className="p-4 text-center font-semibold text-gray-600 w-[250px]">Học sinh</th><th className="p-4 text-center font-semibold text-gray-600">Điểm danh</th><th className="p-4 text-center font-semibold text-gray-600">Thái độ học tập</th><th className="p-4 text-center font-semibold text-gray-600">HĐ ngoại khóa</th><th className="p-4 text-center font-semibold text-gray-600 w-[180px]">Ghi chú</th></tr></thead>
-                        <tbody>{filteredStudents.map(student => { const dateKey = selectedDate.toISOString().split('T')[0]; const record = attendanceRecords[dateKey]?.[student.id] || getInitialAttendanceRecord(); const renderStarRating = (rating) => '★'.repeat(rating) + '☆'.repeat(5 - rating); return (<tr key={student.id} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 hover:shadow-md transition-all duration-200 transform hover:scale-[1.01]"><td className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full flex items-center justify-center bg-cyan-50 flex-shrink-0"><i className="fas fa-user text-lg text-cyan-500"></i></div><div><p className="font-bold text-gray-800">{student.full_name}</p><p className="text-xs text-gray-500">{student.student_code} - {student.class_name}</p></div></div></td><td><select value={record.status} onChange={e => handleAttendanceChange(student.id, 'status', e.target.value)} className="w-full bg-white border border-gray-200 rounded-md px-2 py-1.5 focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500"><option>Có mặt</option><option>Vắng mặt</option><option>Muộn</option></select></td><td><select value={record.attitude} onChange={e => handleAttendanceChange(student.id, 'attitude', parseInt(e.target.value))} className="w-full bg-white border border-gray-200 rounded-md px-2 py-1.5 focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500">{[5, 4, 3, 2, 1].map(r => <option key={r} value={r}>{renderStarRating(r)}</option>)}</select></td><td className="text-center"><button onClick={() => handleAttendanceChange(student.id, 'extracurricular', !record.extracurricular)} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 mx-auto ${record.extracurricular ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}><i className="fas fa-check"></i></button></td><td><input type="text" placeholder="Ghi chú..." value={record.notes} onChange={e => handleAttendanceChange(student.id, 'notes', e.target.value)} className="w-full bg-white border border-gray-200 rounded-md px-2 py-1.5 focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500" /></td></tr>)})}</tbody>
+                        <tbody>{filteredStudents.map(student => { const dateKey = selectedDate.toISOString().split('T')[0]; const record = attendanceRecords[dateKey]?.[student.id] || getInitialAttendanceRecord(); const renderStarRating = (rating) => '★'.repeat(rating) + '☆'.repeat(5 - rating); return (<tr key={student.id} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 hover:shadow-md transition-all duration-200 transform hover:scale-[1.01]"><td className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full flex items-center justify-center bg-cyan-50 flex-shrink-0"><i className="fas fa-user text-lg text-cyan-500"></i></div><div><p className="font-bold text-gray-800">{student.full_name}</p><p className="text-xs text-gray-500">{student.student_code} - {student.class_name}</p></div></div></td><td><select value={record.status} disabled={!isAuthenticated} onChange={e => handleAttendanceChange(student.id, 'status', e.target.value)} className="w-full bg-white border border-gray-200 rounded-md px-2 py-1.5 focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 disabled:bg-gray-100 disabled:cursor-not-allowed"><option>Có mặt</option><option>Vắng mặt</option><option>Muộn</option></select></td><td><select value={record.attitude} disabled={!isAuthenticated} onChange={e => handleAttendanceChange(student.id, 'attitude', parseInt(e.target.value))} className="w-full bg-white border border-gray-200 rounded-md px-2 py-1.5 focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 disabled:bg-gray-100 disabled:cursor-not-allowed">{[5, 4, 3, 2, 1].map(r => <option key={r} value={r}>{renderStarRating(r)}</option>)}</select></td><td className="text-center"><button onClick={() => handleAttendanceChange(student.id, 'extracurricular', !record.extracurricular)} disabled={!isAuthenticated} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 mx-auto ${record.extracurricular ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'} disabled:opacity-50 disabled:cursor-not-allowed`}><i className="fas fa-check"></i></button></td><td><input type="text" placeholder="Ghi chú..." value={record.notes} disabled={!isAuthenticated} onChange={e => handleAttendanceChange(student.id, 'notes', e.target.value)} className="w-full bg-white border border-gray-200 rounded-md px-2 py-1.5 focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 disabled:bg-gray-100 disabled:cursor-not-allowed" /></td></tr>)})}</tbody>
                     </table>
                 </div>
             </div>
@@ -1531,7 +1675,7 @@ function MainComponent() {
                             )}
                         </div>
                     </div>
-                    <button onClick={handleOpenAddViolationModal} className="flex items-center justify-center px-5 py-2.5 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold shadow-lg hover:shadow-xl hover:from-red-600 hover:to-orange-600 transition-all transform hover:-translate-y-0.5">
+                    <button onClick={handleOpenAddViolationModal} disabled={!isAuthenticated} className="flex items-center justify-center px-5 py-2.5 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold shadow-lg hover:shadow-xl hover:from-red-600 hover:to-orange-600 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed">
                         <i className="fas fa-plus mr-2"></i><span>Thêm vi phạm</span>
                     </button>
                 </div>
@@ -1539,7 +1683,7 @@ function MainComponent() {
                 {filteredViolations.length > 0 ? (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {filteredViolations.map((v) => (
-                            <ViolationCard key={v.id} violation={v} onEdit={handleOpenEditViolationModal} onDelete={handleDeleteViolation} onResolve={handleResolveViolation} />
+                            <ViolationCard key={v.id} violation={v} onEdit={handleOpenEditViolationModal} onDelete={handleDeleteViolation} onResolve={handleResolveViolation} isAuthenticated={isAuthenticated} />
                         ))}
                     </div>
                 ) : (
@@ -1559,7 +1703,7 @@ function MainComponent() {
                         <input type="text" value={rewardSearchTerm} onChange={(e) => setRewardSearchTerm(e.target.value)} className="w-full sm:w-auto flex-grow px-4 py-2 border bg-gray-50 border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition" placeholder="Tìm kiếm khen thưởng..." />
                         <select value={rewardSelectedClass} onChange={(e) => setRewardSelectedClass(e.target.value)} className="w-full sm:w-auto px-4 py-2 border bg-gray-50 border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"><option value="">Tất cả lớp</option>{classes.map((cls) => (<option key={cls.id} value={cls.id}>{cls.name}</option>))}</select>
                     </div>
-                    <button onClick={handleOpenAddRewardModal} className="flex items-center justify-center px-5 py-2.5 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold shadow-lg hover:shadow-xl hover:from-yellow-600 hover:to-orange-600 transition-all transform hover:-translate-y-0.5">
+                    <button onClick={handleOpenAddRewardModal} disabled={!isAuthenticated} className="flex items-center justify-center px-5 py-2.5 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold shadow-lg hover:shadow-xl hover:from-yellow-600 hover:to-orange-600 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed">
                         <i className="fas fa-plus mr-2"></i><span>Thêm khen thưởng</span>
                     </button>
                 </div>
@@ -1567,7 +1711,7 @@ function MainComponent() {
                 {filteredRewards.length > 0 ? (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {filteredRewards.map((r) => (
-                            <RewardCard key={r.id} reward={r} onEdit={handleOpenEditRewardModal} onDelete={handleDeleteReward} />
+                            <RewardCard key={r.id} reward={r} onEdit={handleOpenEditRewardModal} onDelete={handleDeleteReward} isAuthenticated={isAuthenticated} />
                         ))}
                     </div>
                 ) : (
@@ -1653,11 +1797,11 @@ function MainComponent() {
                         <div className="pt-4 border-t border-gray-200">
                             <label className="block text-sm font-medium text-gray-700 mb-2">3. Xuất file</label>
                             <div className="flex flex-col sm:flex-row gap-3">
-                                 <button onClick={() => handleExportReport('pdf')} className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-red-500 text-white font-semibold shadow hover:bg-red-600 transition transform hover:-translate-y-0.5">
+                                 <button onClick={() => handleExportReport('pdf')} disabled={!isAuthenticated} className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-red-500 text-white font-semibold shadow hover:bg-red-600 transition transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed">
                                     <i className="fas fa-file-pdf"></i>
                                     <span>Xuất PDF</span>
                                 </button>
-                                 <button onClick={() => handleExportReport('excel')} className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-green-600 text-white font-semibold shadow hover:bg-green-700 transition transform hover:-translate-y-0.5">
+                                 <button onClick={() => handleExportReport('excel')} disabled={!isAuthenticated} className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-green-600 text-white font-semibold shadow hover:bg-green-700 transition transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed">
                                     <i className="fas fa-file-excel"></i>
                                     <span>Xuất Excel</span>
                                 </button>
@@ -1682,7 +1826,7 @@ function MainComponent() {
                 {notificationTab === 'class' && (
                     <div className="space-y-6">
                         <div className="flex justify-end">
-                            <button onClick={handleOpenAddAnnouncementModal} className="flex items-center justify-center px-5 py-2.5 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold shadow-lg hover:shadow-xl hover:from-red-600 hover:to-orange-600 transition-all transform hover:-translate-y-0.5">
+                            <button onClick={handleOpenAddAnnouncementModal} disabled={!isAuthenticated} className="flex items-center justify-center px-5 py-2.5 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold shadow-lg hover:shadow-xl hover:from-red-600 hover:to-orange-600 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed">
                                 <i className="fas fa-plus mr-2"></i><span>Thêm thông báo mới</span>
                             </button>
                         </div>
@@ -1691,8 +1835,8 @@ function MainComponent() {
                                 {announcements.map(ann => (
                                     <div key={ann.id} className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 relative group transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl">
                                         <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button onClick={() => handleOpenEditAnnouncementModal(ann)} className="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-500 rounded-md hover:bg-blue-100 transition-colors"><i className="fas fa-edit"></i></button>
-                                            <button onClick={() => handleDeleteAnnouncement(ann)} className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 rounded-md hover:bg-red-100 transition-colors"><i className="fas fa-trash"></i></button>
+                                            <button onClick={() => handleOpenEditAnnouncementModal(ann)} disabled={!isAuthenticated} className="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-500 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"><i className="fas fa-edit"></i></button>
+                                            <button onClick={() => handleDeleteAnnouncement(ann)} disabled={!isAuthenticated} className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 rounded-md hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"><i className="fas fa-trash"></i></button>
                                         </div>
                                         <h4 className="text-xl font-bold text-gray-800 mb-2">{ann.title}</h4>
                                         <p className="text-gray-600 whitespace-pre-wrap mb-4">{ann.content}</p>
@@ -1728,7 +1872,7 @@ function MainComponent() {
                                                 <p className="text-sm text-gray-500">{student.student_code} - {student.class_name}</p>
                                             </div>
                                         </div>
-                                        <button onClick={() => handleOpenParentNotificationModal(student)} className="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow hover:bg-red-600 transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+                                        <button onClick={() => handleOpenParentNotificationModal(student)} disabled={!isAuthenticated} className="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow hover:bg-red-600 transition-all transform hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                                             <i className="fas fa-paper-plane"></i>
                                             <span>Gửi thông báo</span>
                                         </button>
@@ -1757,13 +1901,13 @@ function MainComponent() {
         </main>
       </div>
 
-      {showLoginModal && (<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl animate-fade-in"><div className="text-center mb-6"><div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"><i className="fas fa-lock text-white text-xl"></i></div><h3 className="text-2xl font-bold text-gray-800">Đăng nhập giáo viên</h3><p className="text-gray-600 mt-2">Để cập nhật dữ liệu học sinh</p></div><form onSubmit={handleLogin} className="space-y-4"><div><label className="block text-sm font-medium text-gray-700 mb-2">Tài khoản</label><input type="text" name="username" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Nhập tài khoản" required /></div><div><label className="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label><input type="password" name="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Nhập mật khẩu" required /></div><div className="flex space-x-3 pt-4"><button type="button" onClick={() => setShowLoginModal(false)} className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200">Hủy</button><button type="submit" className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg">Đăng nhập</button></div><div className="mt-6 p-4 bg-blue-50 rounded-lg"><p className="text-sm text-blue-600"><i className="fas fa-info-circle mr-1"></i>Tài khoản demo: <strong>giaovien</strong> / Mật khẩu: <strong>123456</strong></p></div></form></div></div>)}
+      {showLoginModal && (<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl animate-fade-in"><div className="text-center mb-6"><div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"><i className="fas fa-lock text-white text-xl"></i></div><h3 className="text-2xl font-bold text-gray-800">Đăng nhập giáo viên</h3><p className="text-gray-600 mt-2">Để cập nhật dữ liệu học sinh</p></div><form onSubmit={handleLogin} className="space-y-4"><div><label className="block text-sm font-medium text-gray-700 mb-2">Tài khoản</label><input type="text" name="username" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Nhập tài khoản" required /></div><div><label className="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label><input type="password" name="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Nhập mật khẩu" required /></div><div className="flex space-x-3 pt-4"><button type="button" onClick={() => setShowLoginModal(false)} className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Hủy</button><button type="submit" className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg">Đăng nhập</button></div></form></div></div>)}
       {showStudentModal && (<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto"><div className="text-center mb-6"><div className="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"><i className="fas fa-user-graduate text-white text-xl"></i></div><h3 className="text-2xl font-bold text-gray-800">{editingStudent ? "Sửa thông tin học sinh" : "Thêm học sinh mới"}</h3><p className="text-gray-600 mt-2">Nhập đầy đủ thông tin học sinh</p></div><form onSubmit={handleSaveStudent} className="space-y-4"><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label className="block text-sm font-medium text-gray-700 mb-2">Mã học sinh *</label><input type="text" name="student_code" value={studentForm.student_code} onChange={(e) => setStudentForm({ ...studentForm, student_code: e.target.value })} className="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="VD: CT2024001" required /></div><div><label className="block text-sm font-medium text-gray-700 mb-2">Họ và tên *</label><input type="text" name="full_name" value={studentForm.full_name} onChange={(e) => setStudentForm({ ...studentForm, full_name: e.target.value })} className="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Nhập họ và tên" required /></div><div><label className="block text-sm font-medium text-gray-700 mb-2">Ngày sinh *</label><input type="date" name="date_of_birth" value={studentForm.date_of_birth} onChange={(e) => setStudentForm({ ...studentForm, date_of_birth: e.target.value })} className="w-full px-4 py-3 border border-gray-300 rounded-lg" required /></div><div><label className="block text-sm font-medium text-gray-700 mb-2">Giới tính *</label><select name="gender" value={studentForm.gender} onChange={(e) => setStudentForm({ ...studentForm, gender: e.target.value })} className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white" required><option value="Nam">Nam</option><option value="Nữ">Nữ</option></select></div><div><label className="block text-sm font-medium text-gray-700 mb-2">Lớp học *</label><select name="class_id" value={studentForm.class_id} onChange={(e) => setStudentForm({ ...studentForm, class_id: e.target.value })} className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white" required><option value="">Chọn lớp học</option>{classes.map((cls) => (<option key={cls.id} value={cls.id}>{cls.name}</option>))}</select></div><div><label className="block text-sm font-medium text-gray-700 mb-2">SĐT phụ huynh *</label><input type="tel" name="parent_phone" value={studentForm.parent_phone} onChange={(e) => setStudentForm({ ...studentForm, parent_phone: e.target.value })} className="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="0987654321" required /></div><div><label className="block text-sm font-medium text-gray-700 mb-2">Zalo phụ huynh</label><input type="tel" name="parent_zalo" value={studentForm.parent_zalo} onChange={(e) => setStudentForm({ ...studentForm, parent_zalo: e.target.value })} className="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="0987654321" /></div></div><div><label className="block text-sm font-medium text-gray-700 mb-2">Địa chỉ</label><textarea name="address" value={studentForm.address} onChange={(e) => setStudentForm({ ...studentForm, address: e.target.value })} className="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Nhập địa chỉ đầy đủ" rows={3}/></div><div className="flex space-x-3 pt-6"><button type="button" onClick={() => { setShowStudentModal(false); setEditingStudent(null); }} className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Hủy</button><button type="submit" className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700">{editingStudent ? "Cập nhật" : "Thêm học sinh"}</button></div></form></div></div>)}
       {showImportModal && (<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto"><div className="text-center mb-6"><div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"><i className="fas fa-file-import text-white text-xl"></i></div><h3 className="text-2xl font-bold text-gray-800">Import danh sách học sinh</h3><p className="text-gray-600 mt-2">Tải lên file CSV để import học sinh hàng loạt</p></div><div className="space-y-6"><div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center"><i className="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i><p className="text-gray-600 mb-4">Kéo và thả file hoặc</p><input type="file" accept=".csv" onChange={(e) => { setImportFile(e.target.files[0]); setImportResults(null); }} className="hidden" id="import-file" /><label htmlFor="import-file" className="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2 rounded-lg transition-all duration-200 inline-block shadow-md">Chọn file</label>{importFile && (<p className="text-sm text-green-600 mt-3 font-medium">Đã chọn: {importFile.name}</p>)}</div><div className="bg-blue-50 p-4 rounded-lg border border-blue-200"><h4 className="font-semibold text-blue-800 mb-2">Hướng dẫn:</h4><ul className="text-sm text-blue-700 space-y-1 list-disc list-inside"><li>File phải có định dạng CSV (.csv)</li><li>Dòng đầu tiên phải chứa tên các cột theo file mẫu.</li><li>Các cột bắt buộc: <code className="text-xs bg-blue-100 p-1 rounded">student_code</code>, <code className="text-xs bg-blue-100 p-1 rounded">full_name</code>, <code className="text-xs bg-blue-100 p-1 rounded">date_of_birth</code>, <code className="text-xs bg-blue-100 p-1 rounded">gender</code>, <code className="text-xs bg-blue-100 p-1 rounded">class_name</code>, <code className="text-xs bg-blue-100 p-1 rounded">parent_phone</code></li></ul></div><div className="bg-gray-50 p-4 rounded-lg border border-gray-200"><h4 className="font-semibold text-gray-800 mb-2">Kết quả import:</h4><div className="text-sm space-y-1"><p>Tổng số dòng trong file: <span className="font-bold">{importResults?.total ?? 0}</span></p><p className="text-green-600">Thành công: <span className="font-bold">{importResults?.success ?? 0}</span></p><p className="text-red-600">Lỗi: <span className="font-bold">{importResults?.errors ?? 0}</span></p></div>{importResults?.details?.length > 0 && (<div className="mt-4 pt-2 border-t max-h-40 overflow-y-auto"><table className="w-full text-xs"><thead className="sticky top-0 bg-gray-200 z-10"><tr><th className="p-2 text-left font-semibold">Dòng</th><th className="p-2 text-left font-semibold">Mã HS</th><th className="p-2 text-left font-semibold">Trạng thái</th><th className="p-2 text-left font-semibold">Chi tiết</th></tr></thead><tbody>{importResults.details.map((detail, index) => (<tr key={index} className={`border-b border-gray-100 last:border-b-0 ${detail.status === 'Error' ? 'bg-red-50' : 'bg-green-50'}`}><td className="p-2 text-center font-mono">{detail.row}</td><td className="p-2 font-mono">{detail.student_code}</td><td className={`p-2 font-semibold ${detail.status === 'Error' ? 'text-red-700' : 'text-green-700'}`}>{detail.status === 'Error' ? 'Lỗi' : 'Thành công'}</td><td className="p-2 text-xs">{detail.error || 'Import thành công'}</td></tr>))}</tbody></table></div>)}</div><div className="flex space-x-3 pt-6"><button type="button" onClick={() => setShowImportModal(false)} className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200">Đóng</button><button type="button" onClick={handleImportStudents} disabled={!importFile || loading} className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">{loading ? (<span className="flex items-center justify-center"><svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Đang xử lý...</span>) : 'Bắt đầu Import' }</button></div></div></div></div>)}
       {showViolationModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
           <div className="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-2xl font-bold text-gray-800 mb-6">{editingViolation ? "Sửa vi phạm" : "Thêm vi phạm mới"}</h3>
+            <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">{editingViolation ? "Sửa vi phạm" : "Thêm vi phạm mới"}</h3>
             <form onSubmit={handleSaveViolation} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -1775,7 +1919,10 @@ function MainComponent() {
                 </div>
                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Ngày vi phạm *</label>
-                    <input type="date" name="violation_date" value={violationForm.violation_date} onChange={(e) => setViolationForm({ ...violationForm, violation_date: e.target.value })} className="w-full px-4 py-3 border border-gray-300 rounded-lg" required />
+                    <div className="relative">
+                        <input type="date" name="violation_date" value={violationForm.violation_date} onChange={(e) => setViolationForm({ ...violationForm, violation_date: e.target.value })} className="w-full px-4 py-3 border border-gray-300 rounded-lg pr-10" required />
+                        <i className="fas fa-calendar absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
                 </div>
               </div>
 
@@ -1810,7 +1957,7 @@ function MainComponent() {
                 <textarea name="description" value={violationForm.description} onChange={(e) => setViolationForm({ ...violationForm, description: e.target.value })} className="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Mô tả thêm (nếu có)..." rows={3}/>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Mức độ nghiêm trọng *</label>
                     <select name="severity_level" value={violationForm.severity_level} onChange={(e) => setViolationForm({ ...violationForm, severity_level: e.target.value })} className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white" required>
@@ -1820,25 +1967,14 @@ function MainComponent() {
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Điểm trừ *</label>
-                    <input type="number" name="points_deducted" value={violationForm.points_deducted} onChange={(e) => setViolationForm({ ...violationForm, points_deducted: e.target.valueAsNumber || 0 })} className="w-full px-4 py-3 border border-gray-300 rounded-lg" required min="0"/>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Người báo cáo</label>
+                    <input type="text" name="reported_by" value={violationForm.reported_by} onChange={(e) => setViolationForm({ ...violationForm, reported_by: e.target.value })} className="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="VD: GVCN" />
                 </div>
-                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Vi phạm lần thứ *</label>
-                    <select name="violation_count" value={violationForm.violation_count} onChange={(e) => setViolationForm({ ...violationForm, violation_count: Number(e.target.value) })} className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white" required>
-                        {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)}
-                    </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Người báo cáo</label>
-                <input type="text" name="reported_by" value={violationForm.reported_by} onChange={(e) => setViolationForm({ ...violationForm, reported_by: e.target.value })} className="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="VD: GVCN" />
               </div>
               
               <div className="flex space-x-3 pt-6">
-                  <button type="button" onClick={() => setShowViolationModal(false)} className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Hủy</button>
-                  <button type="submit" className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg hover:from-red-600 hover:to-orange-600">{editingViolation ? "Cập nhật" : "Thêm mới"}</button>
+                  <button type="button" onClick={() => setShowViolationModal(false)} className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold">Hủy</button>
+                  <button type="submit" className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg hover:from-red-600 hover:to-orange-600 font-semibold">{editingViolation ? "Cập nhật" : "Thêm mới"}</button>
               </div>
             </form>
           </div>
@@ -1978,6 +2114,32 @@ function MainComponent() {
                         Hủy
                     </button>
                     <button onClick={confirmDeleteReward} className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                        Xóa
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
+      
+       {absenceToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+            <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+                <div className="text-center">
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i className="fas fa-exclamation-triangle text-red-500 text-3xl"></i>
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-800">Xác nhận xóa</h3>
+                    <p className="text-gray-600 mt-3">
+                        Bạn có chắc chắn muốn xóa bản ghi vắng mặt ngày {new Date(absenceToDelete.date).toLocaleDateString('vi-VN')} của học sinh <strong className="font-semibold text-gray-900">{absenceToDelete.studentName}</strong>?
+                        <br />
+                        <span className="font-semibold text-red-600">Thao tác này không thể hoàn tác.</span>
+                    </p>
+                </div>
+                <div className="flex space-x-4 pt-8">
+                    <button onClick={() => setAbsenceToDelete(null)} className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-all font-semibold">
+                        Hủy
+                    </button>
+                    <button onClick={confirmDeleteAbsence} className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
                         Xóa
                     </button>
                 </div>
