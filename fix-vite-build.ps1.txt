@@ -1,0 +1,29 @@
+Write-Host "===============================" -ForegroundColor Cyan
+Write-Host "🚀 Fixing Vite Build Environment" -ForegroundColor Green
+Write-Host "===============================" -ForegroundColor Cyan
+
+# Xóa node_modules
+Write-Host "🗑️  Deleting node_modules..."
+Remove-Item -Recurse -Force "node_modules" -ErrorAction SilentlyContinue
+
+# Xóa package-lock.json
+Write-Host "🗑️  Deleting package-lock.json (nếu có)..."
+Remove-Item -Force "package-lock.json" -ErrorAction SilentlyContinue
+
+# Xóa .vite-temp
+Write-Host "🗑️  Deleting .vite-temp cache..."
+Remove-Item -Recurse -Force "node_modules\.vite-temp" -ErrorAction SilentlyContinue
+
+# Cài lại dependencies
+Write-Host "📦 Reinstalling dependencies..."
+npm install
+
+# Cài plugin React
+Write-Host "🔧 Installing @vitejs/plugin-react..."
+npm install @vitejs/plugin-react --save-dev
+
+# Build lại dự án
+Write-Host "🏗️ Building project..."
+npm run build
+
+Write-Host "✅ Done! Check if the build was successful." -ForegroundColor Green
